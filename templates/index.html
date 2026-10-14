@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Catálogo de películas y series</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='estilos.css') }}">
+</head>
+<body>
+
+<header>
+    <div class="contenedor">
+        <h1>🎬 Cine & Series</h1>
+        <p>Encontrá tu próxima película favorita</p>
+    </div>
+</header>
+
+<main class="contenedor">
+
+    {% if error %}
+        <div class="mensaje-error">
+            {{ error }}
+        </div>
+    {% endif %}
+
+    <form method="get" action="/">
+
+        <section class="buscador-principal">
+            <h2>Buscá películas y series</h2>
+
+            <div class="buscador-fila">
+                <input
+                    type="search"
+                    name="q"
+                    placeholder="Título, actor, director o descripción..."
+                    value="{{ filtros.q }}"
+                >
+                <button type="submit" class="btn-buscar">Buscar</button>
+            </div>
+        </section>
+
+        <section class="filtros">
+            <h2 class="titulo-seccion">Filtrá el catálogo</h2>
+
+            <div class="filtros-grid">
+
+                <div class="campo">
+                    <label for="tipo">Tipo</label>
+                    <select name="tipo" id="tipo">
+                        <option value="">Todos</option>
+                        {% for item in tipos %}
+                        <option value="{{ item.id }}"
+                            {% if filtros.tipo == item.id|string %}selected{% endif %}>
+                            {{ item.nombre }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="campo">
+                    <label for="pais">País</label>
+                    <select name="pais" id="pais">
+                        <option value="">Todos</option>
+                        {% for item in paises %}
+                        <option value="{{ item.id }}"
+                            {% if filtros.pais == item.id|string %}selected{% endif %}>
+                            {{ item.nombre }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="campo">
+                    <label for="rating">Clasificación</label>
+                    <select name="rating" id="rating">
+                        <option value="">Todas</option>
+                        {% for item in ratings %}
+                        <option value="{{ item.id }}"
+                            {% if filtros.rating == item.id|string %}selected{% endif %}>
+                            {{ item.nombre }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="campo">
+                    <label for="categoria">Categoría</label>
+                    <select name="categoria" id="categoria">
+                        <option value="">Todas</option>
+                        {% for item in categorias %}
+                        <option value="{{ item.id }}"
+                            {% if filtros.categoria == item.id|string %}selected{% endif %}>
+                            {{ item.nombre }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="campo">
+                    <label for="actor">Actor</label>
+                    <select name="actor" id="actor">
+                        <option value="">Todos</option>
+                        {% for item in actores %}
+                        <option value="{{ item.id }}"
+                            {% if filtros.actor == item.id|string %}selected{% endif %}>
+                            {{ item.nombre }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="campo">
+                    <label for="director">Director</label>
+                    <select name="director" id="director">
+                        <option value="">Todos</option>
+                        {% for item in directores %}
+                        <option value="{{ item.id }}"
+                            {% if filtros.director == item.id|string %}selected{% endif %}>
+                            {{ item.nombre }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="campo">
+                    <label for="desde">Año desde</label>
+                    <input type="number" name="desde" id="desde"
+                           min="1900" max="2100" placeholder="Ej. 2000"
+                           value="{{ filtros.desde }}">
+                </div>
+
+                <div class="campo">
+                    <label for="hasta">Año hasta</label>
+                    <input type="number" name="hasta" id="hasta"
+                           min="1900" max="2100" placeholder="Ej. 2025"
+                           value="{{ filtros.hasta }}">
+                </div>
+
+            </div>
+
+            <div class="acciones-filtros">
+                <button type="submit" class="btn-aplicar">
+                    Aplicar filtros
+                </button>
+                <a href="{{ url_for('index') }}" class="btn-limpiar">
+                    Limpiar filtros
+                </a>
+            </div>
+        </section>
+
+    </form>
+
+    <section class="estadisticas">
+        <div class="estadistica">
+            <span>Coincidencias</span>
+            <strong>{{ total }}</strong>
+        </div>
+
+        <div class="estadistica total-catalogo">
+            <span>Total del catálogo</span>
+            <strong>{{ total_general }}</strong>
+        </div>
+    </section>
+
+    <section>
+        <div class="resultados-cabecera">
+            <h2 class="titulo-seccion">Resultados</h2>
+            <span class="etiqueta-resultados">
+                Página {{ page }} de {{ pages }}
+            </span>
+        </div>
+
+        {% if resultados %}
+        <div class="catalogo">
+            {% for item in resultados %}
+            <article class="pelicula">
+
+                <div class="poster">
+                    {% if item.portada %}
+                    <img
+                        src="{{ item.portada }}"
+                        alt="Póster de {{ item.titulo }}"
+                        loading="lazy"
+                    >
+                    {% else %}
+                    <div class="poster-sin-imagen">
+                        <span class="icono">🎬</span>
+                        <span>Sin portada disponible</span>
+                    </div>
+                    {% endif %}
+
+                    <span class="tipo-poster">
+                        {{ item.tipo or 'Título' }}
+                    </span>
+                </div>
+
+                <div class="pelicula-contenido">
+                    <h3>{{ item.titulo }}</h3>
+
+                    <div class="datos">
+                        <span class="dato">
+                            📅 {{ item.anio_salida or 'Año desconocido' }}
+                        </span>
+                        <span class="dato">
+                            🎭 {{ item.clasificacion or 'Sin clasificación' }}
+                        </span>
+                    </div>
+
+                    <div class="detalle">
+                        <p><strong>Director:</strong>
+                            {{ item.directores or 'No disponible' }}
+                        </p>
+                        <p><strong>Actores:</strong>
+                            {{ item.actores or 'No disponibles' }}
+                        </p>
+                        <p><strong>País:</strong>
+                            {{ item.paises or 'No disponible' }}
+                        </p>
+                        <p><strong>Categorías:</strong>
+                            {{ item.categorias or 'No disponibles' }}
+                        </p>
+                        <p><strong>Duración:</strong>
+                            {{ item.duracion or 'No disponible' }}
+                        </p>
+                        <p><strong>Agregado:</strong>
+                            {{ item.fecha_aniadido or 'Sin fecha' }}
+                        </p>
+                    </div>
+
+                    <p class="descripcion">
+                        {{ item.descripcion or 'No hay descripción disponible.' }}
+                    </p>
+                </div>
+
+            </article>
+            {% endfor %}
+        </div>
+
+        {% else %}
+        <div class="sin-resultados">
+            <h3>No encontramos resultados</h3>
+            <p>Probá cambiar los filtros o buscar otro título.</p>
+        </div>
+        {% endif %}
+    </section>
+
+    {% if pages > 1 %}
+    <nav class="paginacion" aria-label="Paginación">
+
+        {% if page > 1 %}
+        <a href="{{ url_for('index', **dict(request.args, page=page-1)) }}">
+            ← Anterior
+        </a>
+        {% endif %}
+
+        <span class="pagina-actual">{{ page }}</span>
+
+        {% if page < pages %}
+        <a href="{{ url_for('index', **dict(request.args, page=page+1)) }}">
+            Siguiente →
+        </a>
+        {% endif %}
+
+    </nav>
+    {% endif %}
+
+</main>
+
+<footer>
+    <p>Catálogo de películas y series · Proyecto Python + MySQL</p>
+    <p>Los pósteres se consultan en línea mediante TMDB.</p>
+</footer>
+
+</body>
+</html>
